@@ -1,0 +1,129 @@
+<template>
+    <div class="blackroad-agent-dashboard">
+
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <span class="logo">◈</span>
+                <h1>BlackRoad OS — Agent Control Center</h1>
+                <span class="cost-badge">$0/mo</span>
+            </div>
+            <div class="header-right">
+                <lightning-button label="Sync from Pi Fleet"
+                    icon-name="utility:refresh"
+                    onclick={syncFromPi}
+                    variant="brand">
+                </lightning-button>
+                <lightning-button label="Deploy to All Orgs"
+                    icon-name="utility:upload"
+                    onclick={triggerUniverseSync}
+                    variant="success">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <template if:true={stats}>
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <span class="stat-number">{stats.totalAgents}</span>
+                    <span class="stat-label">Total Agents</span>
+                </div>
+                <div class="stat-card active">
+                    <span class="stat-number">{stats.activeAgents}</span>
+                    <span class="stat-label">Active</span>
+                </div>
+                <div class="stat-card cf">
+                    <span class="stat-number">{stats.cfWorkers}</span>
+                    <span class="stat-label">CF Workers</span>
+                </div>
+                <div class="stat-card pi">
+                    <span class="stat-number">{stats.piAgents}</span>
+                    <span class="stat-label">Pi Agents</span>
+                </div>
+                <div class="stat-card tasks">
+                    <span class="stat-number">{stats.pendingTasks}</span>
+                    <span class="stat-label">Pending Tasks</span>
+                </div>
+                <div class="stat-card cost">
+                    <span class="stat-number">{stats.totalCost}</span>
+                    <span class="stat-label">Monthly Cost</span>
+                </div>
+            </div>
+        </template>
+
+        <!-- Pantheon Tabs -->
+        <lightning-tabset active-tab-value="all">
+            <lightning-tab label="All Agents" value="all">
+                <div class="agent-grid">
+                    <template for:each={agents} for:item="agent">
+                        <div key={agent.Id} class="agent-card" data-id={agent.AgentId__c}>
+                            <div class="agent-header">
+                                <span class="agent-symbol">{agent.Symbol__c}</span>
+                                <span class="agent-name">{agent.Name}</span>
+                                <span class={agent.statusClass}>{agent.Status__c}</span>
+                            </div>
+                            <div class="agent-body">
+                                <p class="agent-role">{agent.Role__c}</p>
+                                <p class="agent-domain">{agent.Domain__c}</p>
+                                <div class="agent-meta">
+                                    <span class="deploy-target">{agent.DeployTarget__c}</span>
+                                    <span class="model">{agent.OllamaModel__c}</span>
+                                </div>
+                            </div>
+                            <div class="agent-footer">
+                                <lightning-button-icon
+                                    icon-name="utility:play"
+                                    title="Invoke Agent"
+                                    onclick={invokeAgent}
+                                    data-agent={agent.AgentId__c}
+                                    variant="border-filled"
+                                    size="small">
+                                </lightning-button-icon>
+                                <span class="cost-label">$0</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-tab>
+
+            <lightning-tab label="🏹 Tasks" value="tasks">
+                <lightning-datatable
+                    key-field="Id"
+                    data={pendingTasks}
+                    columns={taskColumns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </lightning-tab>
+
+            <lightning-tab label="🔀 Deploy" value="deploy">
+                <div class="deploy-section">
+                    <h3>Universe Sync — BlackRoad-OS-Inc → All 17 Orgs</h3>
+                    <p>Deploys from one repo to 1,825+ repos. Cost: $0.</p>
+                    <lightning-combobox
+                        label="Sync Payload"
+                        value={syncPayload}
+                        options={payloadOptions}
+                        onchange={handlePayloadChange}>
+                    </lightning-combobox>
+                    <lightning-button
+                        label="🌌 Trigger Universe Sync"
+                        onclick={triggerUniverseSync}
+                        variant="brand"
+                        class="sync-button">
+                    </lightning-button>
+                    <template if:true={deployments}>
+                        <h4>Recent Deployments</h4>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={deployments}
+                            columns={deployColumns}
+                            hide-checkbox-column>
+                        </lightning-datatable>
+                    </template>
+                </div>
+            </lightning-tab>
+        </lightning-tabset>
+
+    </div>
+</template>

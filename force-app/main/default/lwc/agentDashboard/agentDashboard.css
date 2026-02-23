@@ -1,0 +1,96 @@
+.blackroad-agent-dashboard {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    padding: 21px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 34px;
+    border-bottom: 1px solid #FF1D6C;
+    padding-bottom: 21px;
+}
+
+.header-left { display: flex; align-items: center; gap: 13px; }
+.logo { font-size: 2rem; color: #FF1D6C; }
+h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.cost-badge {
+    background: #00C853;
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 13px;
+    margin-bottom: 34px;
+}
+
+.stat-card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+.stat-card.active  { border-color: #00C853; }
+.stat-card.cf      { border-color: #F5A623; }
+.stat-card.pi      { border-color: #9C27B0; }
+.stat-card.tasks   { border-color: #2979FF; }
+.stat-card.cost    { border-color: #00C853; background: #001a0a; }
+
+.stat-number { display: block; font-size: 1.8rem; font-weight: 700; color: #FF1D6C; }
+.stat-label  { display: block; font-size: 0.7rem; color: #666; margin-top: 4px; }
+.stat-card.cost .stat-number { color: #00C853; }
+
+.agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 13px;
+    margin-top: 16px;
+}
+
+.agent-card {
+    background: #0a0a0a;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 13px;
+    transition: border-color 0.2s;
+}
+.agent-card:hover { border-color: #FF1D6C; }
+
+.agent-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.agent-symbol  { font-size: 1.2rem; }
+.agent-name    { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.agent-role    { font-size: 0.75rem; color: #888; margin: 4px 0; }
+.agent-domain  { font-size: 0.7rem; color: #F5A623; }
+.agent-footer  { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.cost-label    { font-size: 0.7rem; color: #00C853; font-weight: 600; }
+
+.status-badge  { font-size: 0.6rem; padding: 2px 6px; border-radius: 100px; }
+.status-active   { background: #00C85322; color: #00C853; }
+.status-spawning { background: #F5A62322; color: #F5A623; }
+.status-idle     { background: #2979FF22; color: #2979FF; }
+.status-offline  { background: #33333322; color: #666; }
+
+.deploy-section { padding: 21px 0; }
+.deploy-section h3 { margin-bottom: 8px; }
+.deploy-section p  { color: #00C853; margin-bottom: 21px; }
+.sync-button { margin-top: 16px; }
+
+.agent-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.deploy-target, .model {
+    font-size: 0.6rem;
+    background: #1a1a1a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #9C27B0;
+}
