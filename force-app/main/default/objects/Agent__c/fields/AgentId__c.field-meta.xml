@@ -4,6 +4,8 @@
     <label>Agent ID</label>
     <type>Text</type>
         <length>100</length>
+    <externalId>true</externalId>
+    <unique>true</unique>
     <required>true</required>
     
 </CustomField>

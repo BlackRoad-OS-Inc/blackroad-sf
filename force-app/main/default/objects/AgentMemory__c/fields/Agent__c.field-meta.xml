@@ -4,7 +4,7 @@
     <label>Agent</label>
     <type>Lookup</type>
         <referenceTo>Agent__c</referenceTo>
-        <relationshipName>Agent</relationshipName>
+        <relationshipName>Memories</relationshipName>
     <required>false</required>
     
 </CustomField>
