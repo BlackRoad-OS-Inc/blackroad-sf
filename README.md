@@ -1,18 +1,71 @@
-# Salesforce DX Project: Next Steps
+# blackroad-sf
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+> Salesforce platform integration, custom objects, Lightning Web Components, and Apex services for BlackRoad OS.
 
-## How Do You Plan to Deploy Your Changes?
+[![CI](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/ci.yml/badge.svg)](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/ci.yml)
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+## Overview
 
-## Configure Your Salesforce DX Project
+The Salesforce DX project for BlackRoad OS. Contains custom objects for agent management, deployment tracking, task orchestration, and memory storage — all wired into the BlackRoad agent ecosystem.
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+## Structure
 
-## Read All About It
+```
+blackroad-sf/
+├── force-app/main/default/
+│   ├── classes/          # Apex classes
+│   ├── lwc/              # Lightning Web Components
+│   ├── objects/           # Custom objects (Agent, AgentModel, etc.)
+│   └── applications/     # App configurations
+├── config/               # Scratch org definitions
+├── scripts/              # Apex & SOQL samples
+└── .github/              # CI/CD & templates
+```
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+## Quick Start
+
+```bash
+# Install dependencies
+npm ci
+
+# Lint
+npm run lint
+
+# Run tests
+npm test
+
+# Format code
+npm run prettier
+```
+
+## Custom Objects
+
+| Object | Description |
+|--------|-------------|
+| `Agent__c` | Agent configurations (status, role, domain, platform) |
+| `AgentModel__c` | AI model tracking (host, costs, endpoints) |
+| `AgentRelationship__c` | Agent-to-agent relationships |
+| `AgentDeployment__c` | Deployment tracking (target, status, cost) |
+| `AgentTask__c` | Task management (priority, assignment, results) |
+| `AgentMemory__c` | Memory storage (type, content, confidence) |
+
+## Development
+
+```bash
+# Create a scratch org
+sf org create scratch -f config/project-scratch-def.json -a blackroad-dev
+
+# Push source
+sf project deploy start
+
+# Run Apex tests
+sf apex run test --code-coverage
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+© BlackRoad OS, Inc. — All rights reserved. Proprietary.
