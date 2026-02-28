@@ -118,7 +118,7 @@ Subject: [SECURITY] Brief description
    # Use environment variables
    export SFDX_AUTH_URL="your-url"
 
-   # Or .env files (gitignored)
+   # Or store them in a local .env file (make sure it's in your .gitignore)
    echo "SFDX_AUTH_URL=your-url" >> .env
    ```
 
