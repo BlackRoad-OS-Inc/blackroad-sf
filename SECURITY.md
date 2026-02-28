@@ -6,14 +6,12 @@
 
 ## 🔐 Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| 2.x.x | ✅ Active support |
-| 1.x.x | ⚠️ Security fixes only |
-| < 1.0 | ❌ No support |
+This project currently identifies as version `1.0.0` and does not maintain multiple active major versions.
+
+- ✅ The latest published release is supported for security issues.
+- ⚠️ Older releases may receive security fixes at the maintainers' discretion.
 
 ---
-
 ## 🚨 Reporting a Vulnerability
 
 ### DO NOT
