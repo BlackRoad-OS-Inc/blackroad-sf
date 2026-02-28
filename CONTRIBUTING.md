@@ -86,9 +86,10 @@ cd blackroad-sf
 # Install dependencies
 npm ci
 
-# Set up environment
-cp .env.example .env
-# Edit .env with your Salesforce credentials
+# Set up environment (do not commit any .env* files)
+cp .env.example .env.local
+# Edit .env.local with your Salesforce credentials
+# Ensure .env and .env.* are listed in your .gitignore so secrets are never committed
 
 # Verify setup
 npm run lint
