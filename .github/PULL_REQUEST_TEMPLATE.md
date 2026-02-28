@@ -18,6 +18,6 @@
 - [ ] No regressions
 
 ## Checklist
-- [ ] CHANGELOG.md updated
+- [ ] User-facing changes documented (e.g., release notes or docs)
 - [ ] No secrets committed
 - [ ] CI passes
