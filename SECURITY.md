@@ -100,13 +100,13 @@ Subject: [SECURITY] Brief description
 
 ### Automated Scans
 
-| Scan Type | Frequency | Tool |
-|-----------|-----------|------|
-| SAST | Every PR | CodeQL |
-| DAST | Weekly | OWASP ZAP |
-| Dependencies | Daily | Dependabot |
-| Secrets | Every commit | GitLeaks |
+| Scan Type    | Frequency | Tool       |
+|--------------|-----------|------------|
+| Dependencies | Weekly    | Dependabot |
 
+> Note: Additional automated security scanners (e.g., SAST, DAST, secrets scanning)
+> may be introduced in the future. This table reflects the tooling currently
+> configured in this repository.
 ---
 
 ## 🔒 Security Best Practices
