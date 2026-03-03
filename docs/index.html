@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlackRoad SF — Agent Control Center</title>
+    <style>
+      :root {
+        --bg: #000;
+        --surface: #0a0a0a;
+        --border: #222;
+        --accent: #ff1d6c;
+        --green: #00c853;
+        --amber: #f5a623;
+        --purple: #9c27b0;
+        --blue: #2979ff;
+        --text: #fff;
+        --muted: #888;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-bottom: 1px solid var(--accent);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      header .logo {
+        font-size: 2.5rem;
+        color: var(--accent);
+      }
+      header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+      header .badge {
+        background: var(--green);
+        color: #000;
+        padding: 3px 12px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: auto;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+      }
+      .stat-card.active {
+        border-color: var(--green);
+      }
+      .stat-card.cf {
+        border-color: var(--amber);
+      }
+      .stat-card.pi {
+        border-color: var(--purple);
+      }
+      .stat-card.tasks {
+        border-color: var(--blue);
+      }
+      .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .stat-card.active .stat-number {
+        color: var(--green);
+      }
+      .stat-label {
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      h2 {
+        font-size: 1.1rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
+      }
+      .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .agent-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        transition: border-color 0.2s;
+      }
+      .agent-card:hover {
+        border-color: var(--accent);
+      }
+      .agent-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .agent-symbol {
+        font-size: 1.3rem;
+      }
+      .agent-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        flex: 1;
+      }
+      .status-badge {
+        font-size: 0.6rem;
+        padding: 2px 7px;
+        border-radius: 100px;
+      }
+      .status-active {
+        background: #00c85322;
+        color: var(--green);
+      }
+      .status-idle {
+        background: #2979ff22;
+        color: var(--blue);
+      }
+      .status-offline {
+        background: #33333322;
+        color: #666;
+      }
+      .agent-role {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin: 4px 0;
+      }
+      .agent-model {
+        font-size: 0.65rem;
+        background: #1a1a1a;
+        color: var(--purple);
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 4px;
+      }
+      .section {
+        margin-bottom: 2.5rem;
+      }
+      .quick-start {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+      }
+      pre {
+        background: #111;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        color: var(--green);
+        margin: 0.75rem 0;
+      }
+      .links {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+      }
+      .links a {
+        background: var(--surface);
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        text-decoration: none;
+        padding: 8px 18px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+      .links a:hover {
+        background: var(--accent);
+        color: #000;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+        margin-top: 3rem;
+        font-size: 0.75rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      #last-updated {
+        color: var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="logo">◈</span>
+      <div>
+        <h1>BlackRoad SF</h1>
+        <p style="color: var(--muted); font-size: 0.85rem">
+          Salesforce × Local Ollama Agent Control
+        </p>
+      </div>
+      <span class="badge">$0/mo</span>
+    </header>
+
+    <div class="stats">
+      <div class="stat-card">
+        <span class="stat-number" id="stat-objects">6</span>
+        <span class="stat-label">Custom Objects</span>
+      </div>
+      <div class="stat-card active">
+        <span class="stat-number" id="stat-agents">7</span>
+        <span class="stat-label">Agents</span>
+      </div>
+      <div class="stat-card pi">
+        <span class="stat-number" id="stat-pi">2</span>
+        <span class="stat-label">Pi Nodes</span>
+      </div>
+      <div class="stat-card cf">
+        <span class="stat-number" id="stat-workers">3</span>
+        <span class="stat-label">CF Workers</span>
+      </div>
+      <div class="stat-card tasks">
+        <span class="stat-number" id="stat-cost">$0</span>
+        <span class="stat-label">Monthly Cost</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>◈ Agent Roster</h2>
+      <div class="agent-grid" id="agent-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🚀 Quick Start</h2>
+      <div class="quick-start">
+        <p style="color: var(--muted); margin-bottom: 1rem">
+          Get up and running with local Ollama execution:
+        </p>
+        <pre>
+# 1. Install Ollama on your Pi (ARM64)
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# 2. Pull agent models
+ollama pull llama3   # Lucidia
+ollama pull mistral  # Octavia
+
+# 3. Install project deps
+npm ci
+
+# 4. Run tests
+npm test</pre
+        >
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔗 Links</h2>
+      <div class="links">
+        <a href="https://github.com/BlackRoad-OS-Inc/blackroad-sf"
+          >GitHub Repo</a
+        >
+        <a
+          href="https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/ci.yml"
+          >CI Status</a
+        >
+        <a
+          href="https://github.com/BlackRoad-OS-Inc/blackroad-sf/blob/main/README.md"
+          >README</a
+        >
+        <a
+          href="https://github.com/BlackRoad-OS-Inc/blackroad-sf/blob/main/CONTRIBUTING.md"
+          >Contributing</a
+        >
+        <a
+          href="https://github.com/BlackRoad-OS-Inc/blackroad-sf/blob/main/SECURITY.md"
+          >Security</a
+        >
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        © BlackRoad OS, Inc. — Proprietary &nbsp;|&nbsp; Last updated:
+        <span id="last-updated"></span>
+      </p>
+    </footer>
+
+    <script>
+      // Dynamic agent roster
+      const AGENTS = [
+        {
+          symbol: "◈",
+          name: "Lucidia",
+          role: "Coordinator",
+          model: "llama3",
+          host: "192.168.4.81",
+          status: "active"
+        },
+        {
+          symbol: "⬡",
+          name: "Octavia",
+          role: "Compute",
+          model: "mistral",
+          host: "192.168.4.38",
+          status: "active"
+        },
+        {
+          symbol: "↝",
+          name: "Alice",
+          role: "Router",
+          model: "codellama",
+          host: "cf-worker",
+          status: "active"
+        },
+        {
+          symbol: "◐",
+          name: "Prism",
+          role: "Analyst",
+          model: "llama3",
+          host: "cf-worker",
+          status: "idle"
+        },
+        {
+          symbol: "∞",
+          name: "Echo",
+          role: "Memory",
+          model: "mistral",
+          host: "cf-worker",
+          status: "idle"
+        },
+        {
+          symbol: "⌖",
+          name: "Cipher",
+          role: "Security",
+          model: "llama3",
+          host: "cf-worker",
+          status: "idle"
+        },
+        {
+          symbol: "♡",
+          name: "CeCe",
+          role: "Soul",
+          model: "llama3",
+          host: "cf-worker",
+          status: "idle"
+        }
+      ];
+
+      const grid = document.getElementById("agent-grid");
+      AGENTS.forEach((a) => {
+        grid.innerHTML += `
+        <div class="agent-card">
+          <div class="agent-header">
+            <span class="agent-symbol">${a.symbol}</span>
+            <span class="agent-name">${a.name}</span>
+            <span class="status-badge status-${a.status}">${a.status}</span>
+          </div>
+          <p class="agent-role">${a.role}</p>
+          <span class="agent-model">${a.model} @ ${a.host}</span>
+        </div>`;
+      });
+
+      // Dynamic last-updated timestamp
+      document.getElementById("last-updated").textContent =
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+    </script>
+  </body>
+</html>
