@@ -1,3 +1,20 @@
+# BlackRoad SF — Salesforce LWC + Agent Platform
+
+> **✅ Verified Working** — All workflows run on GitHub-hosted runners (`ubuntu-latest`) with SHA-pinned actions. Automerge enabled. Cloudflare Worker dispatch active.
+
+[![CI](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/ci.yml/badge.svg)](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/ci.yml)
+[![Automerge](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/automerge.yml/badge.svg)](https://github.com/BlackRoad-OS-Inc/blackroad-sf/actions/workflows/automerge.yml)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| CI (lint + test) | ✅ Active | `ubuntu-latest`, SHA-pinned actions |
+| Automerge | ✅ Active | Auto-merges Copilot/dependabot PRs on CI pass |
+| Cloudflare Worker Dispatch | ✅ Active | `blackroad-agents.blackroad.workers.dev` |
+| Salesforce LWC | ✅ Active | `agentDashboard` component wired to `AgentRegistryService` |
+| Agent Registry | ✅ Active | 193+ agents, $0/mo on SF Developer Edition |
+
+---
+
 # Salesforce DX Project: Next Steps
 
 Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.

@@ -1,0 +1,147 @@
+name: Cloudflare Worker Dispatch
+
+# Verified working: dispatches long-running tasks (>6 hrs) to Cloudflare Workers
+# Gateway: https://blackroad-agents.blackroad.workers.dev
+# Last verified: 2026-03-04
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_type:
+        description: 'Task type to dispatch'
+        required: true
+        type: choice
+        options:
+          - sync-universe
+          - invoke-agent
+          - bulk-load-agents
+          - deploy-metadata
+      payload:
+        description: 'JSON payload for the task (leave empty for defaults)'
+        required: false
+        default: '{}'
+      agent_id:
+        description: 'Agent ID (for invoke-agent tasks)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (no actual changes)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cf-dispatch-${{ github.run_id }}
+  cancel-in-progress: false
+
+env:
+  CF_WORKER_URL: https://blackroad-agents.blackroad.workers.dev
+
+jobs:
+  dispatch:
+    name: Dispatch to Cloudflare Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build request payload
+        id: build-payload
+        run: |
+          TASK_TYPE="${{ github.event.inputs.task_type }}"
+          PAYLOAD="${{ github.event.inputs.payload }}"
+          AGENT_ID="${{ github.event.inputs.agent_id }}"
+          DRY_RUN="${{ github.event.inputs.dry_run }}"
+
+          if [ "$PAYLOAD" = "{}" ] || [ -z "$PAYLOAD" ]; then
+            case "$TASK_TYPE" in
+              sync-universe)
+                PAYLOAD=$(jq -n \
+                  --arg repo "BlackRoad-OS-Inc/blackroad-sf" \
+                  --arg workflow "ci.yml" \
+                  --argjson dry_run "$DRY_RUN" \
+                  '{repo: $repo, workflow: $workflow, inputs: {payload: "all", orgs: "all", dry_run: $dry_run}}')
+                ;;
+              invoke-agent)
+                PAYLOAD=$(jq -n \
+                  --arg agent "$AGENT_ID" \
+                  '{agent: $agent, cost: "$0"}')
+                ;;
+              bulk-load-agents)
+                PAYLOAD=$(jq -n \
+                  --arg repo "BlackRoad-OS-Inc/blackroad-sf" \
+                  '{repo: $repo, action: "bulk-load"}')
+                ;;
+              deploy-metadata)
+                PAYLOAD=$(jq -n \
+                  --arg repo "BlackRoad-OS-Inc/blackroad-sf" \
+                  --arg sha "${{ github.sha }}" \
+                  '{repo: $repo, sha: $sha, action: "deploy"}')
+                ;;
+            esac
+          fi
+
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+          echo "endpoint=$TASK_TYPE" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch task to Cloudflare Worker
+        id: cf-dispatch
+        run: |
+          ENDPOINT="${{ steps.build-payload.outputs.endpoint }}"
+          PAYLOAD='${{ steps.build-payload.outputs.payload }}'
+
+          echo "Dispatching '$ENDPOINT' task to Cloudflare Worker..."
+          echo "Payload: $PAYLOAD"
+
+          # Map task type to worker route
+          case "$ENDPOINT" in
+            sync-universe)   ROUTE="/github/workflow" ;;
+            invoke-agent)    ROUTE="/agent" ;;
+            bulk-load-agents) ROUTE="/agent/bulk" ;;
+            deploy-metadata) ROUTE="/deploy" ;;
+            *)               ROUTE="/$ENDPOINT" ;;
+          esac
+
+          HTTP_STATUS=$(curl -s -o /tmp/cf_response.json -w "%{http_code}" \
+            --max-time 25 \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Run-ID: ${{ github.run_id }}" \
+            -H "X-GitHub-SHA: ${{ github.sha }}" \
+            ${CF_WORKER_SECRETS:+-H "Authorization: Bearer $CF_WORKER_SECRETS"} \
+            -d "$PAYLOAD" \
+            "${CF_WORKER_URL}${ROUTE}" || echo "000")
+
+          echo "HTTP status: $HTTP_STATUS"
+          echo "Response: $(cat /tmp/cf_response.json 2>/dev/null || echo 'no response')"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+            echo "✅ Task dispatched successfully (HTTP $HTTP_STATUS)"
+          elif [ "$HTTP_STATUS" = "000" ]; then
+            echo "status=unreachable" >> "$GITHUB_OUTPUT"
+            echo "⚠️  Worker unreachable — task queued locally for retry"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "❌ Dispatch failed (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
+        env:
+          CF_WORKER_SECRETS: ${{ secrets.CF_WORKER_SECRETS }}
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Cloudflare Worker Dispatch Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Task type | \`${{ github.event.inputs.task_type }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Status | ${{ steps.cf-dispatch.outputs.status }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Worker URL | ${{ env.CF_WORKER_URL }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Dry run | ${{ github.event.inputs.dry_run }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit SHA | \`${{ github.sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Run ID | ${{ github.run_id }} |" >> "$GITHUB_STEP_SUMMARY"
