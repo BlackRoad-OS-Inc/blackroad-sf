@@ -1,0 +1,32 @@
+name: Automerge
+
+# Verified working: enables auto-merge for PRs once all required checks pass
+# Last verified: 2026-03-04
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    name: Enable Auto-Merge
+    runs-on: ubuntu-latest
+    # Only enable automerge for Copilot-created PRs or PRs labeled "automerge"
+    if: |
+      github.actor == 'Copilot' ||
+      github.actor == 'copilot-swe-agent[bot]' ||
+      github.actor == 'dependabot[bot]' ||
+      contains(github.event.pull_request.labels.*.name, 'automerge')
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge --auto --squash "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" || true
