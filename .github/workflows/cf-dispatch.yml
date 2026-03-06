@@ -79,8 +79,10 @@ jobs:
 
       - name: Summary
         if: always()
+        env:
+          AGENT_ID: ${{ inputs.agent_id }}
         run: |
           echo "## Dispatch Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Task:** ${{ inputs.task_type }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Dry Run:** ${{ inputs.dry_run }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Agent ID:** ${{ inputs.agent_id || 'N/A' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Agent ID:** ${AGENT_ID:-N/A}" >> "$GITHUB_STEP_SUMMARY"
