@@ -6,7 +6,7 @@ This is the Salesforce metadata repository for **BlackRoad OS**, an AI agent orc
 
 - **Platform:** Salesforce (Developer Edition, free forever)
 - **API Version:** 65.0
-- **Key objects:** Agent**c, AgentTask**c, AgentDeployment**c, AgentMemory**c, AgentModel**c, AgentRelationship**c
+- **Key objects:** `Agent__c`, `AgentTask__c`, `AgentDeployment__c`, `AgentMemory__c`, `AgentModel__c`, `AgentRelationship__c`
 - **LWC components:** agentDashboard (main control center)
 - **Apex services:** AgentRegistryService (agent CRUD, task logging, memory, deployments)
 - **External integrations:** Cloudflare Workers gateway, Pi fleet (Ollama)
