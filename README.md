@@ -21,8 +21,8 @@ Salesforce metadata repository for **BlackRoad OS** — an AI agent orchestratio
 │  → blackroad-agents.blackroad.workers.dev                   │
 ├─────────────────────────────────────────────────────────────┤
 │  Pi Fleet (Hailo-8 + Ollama)                                │
-│  → Octavia (192.168.4.38) · Lucidia (192.168.4.81)         │
-│  → Cecilia (192.168.4.89)                                   │
+│  → Octavia (192.168.x.38) · Lucidia (192.168.x.81)          │
+│  → Cecilia (192.168.x.89)                                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
