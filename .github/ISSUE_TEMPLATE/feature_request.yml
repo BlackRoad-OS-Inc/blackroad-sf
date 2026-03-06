@@ -1,0 +1,51 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: team
+    attributes:
+      label: Team
+      options:
+        - Platform (Apex / LWC)
+        - Infrastructure (CI / Workers)
+        - Agents (Pi Fleet / Ollama)
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P1 — Must have
+        - P2 — Should have
+        - P3 — Nice to have
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Single component
+        - Multiple components
+        - Cross-repo
+    validations:
+      required: true

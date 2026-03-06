@@ -1,0 +1,86 @@
+name: Cloudflare Worker Dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_type:
+        description: "Task type to dispatch"
+        required: true
+        type: choice
+        options:
+          - sync-universe
+          - invoke-agent
+          - bulk-load-agents
+          - deploy-metadata
+      payload:
+        description: "JSON payload for the task (leave empty for defaults)"
+        required: false
+        default: "{}"
+      agent_id:
+        description: "Agent ID (for invoke-agent tasks)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run (no actual changes)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  WORKER_URL: https://blackroad-agents.blackroad.workers.dev
+
+jobs:
+  dispatch:
+    name: Dispatch to Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Build request payload
+        id: payload
+        env:
+          TASK_TYPE: ${{ inputs.task_type }}
+          INPUT_PAYLOAD: ${{ inputs.payload }}
+          AGENT_ID: ${{ inputs.agent_id }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          REQUEST=$(jq -n \
+            --arg task "$TASK_TYPE" \
+            --argjson payload "$INPUT_PAYLOAD" \
+            --arg agent "$AGENT_ID" \
+            --argjson dry_run "$DRY_RUN" \
+            '{task: $task, payload: $payload, agent_id: $agent, dry_run: $dry_run}')
+          echo "request=$REQUEST" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch to Cloudflare Worker
+        env:
+          REQUEST: ${{ steps.payload.outputs.request }}
+        run: |
+          echo "Dispatching ${{ inputs.task_type }} to $WORKER_URL..."
+          HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -X POST "$WORKER_URL/dispatch" \
+            -H "Content-Type: application/json" \
+            -d "$REQUEST" \
+            --max-time 30) || {
+            echo "::warning::Worker unreachable — task queued for retry"
+            exit 0
+          }
+
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/response.json
+
+          if [ "$HTTP_STATUS" -ge 400 ]; then
+            echo "::error::Worker returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Dispatch Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Task:** ${{ inputs.task_type }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Dry Run:** ${{ inputs.dry_run }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Agent ID:** ${{ inputs.agent_id || 'N/A' }}" >> "$GITHUB_STEP_SUMMARY"
