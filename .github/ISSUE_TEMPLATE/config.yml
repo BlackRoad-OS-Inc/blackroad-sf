@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: BlackRoad Documentation
+    url: https://blackroad.dev/docs
+    about: Check the docs before opening an issue
+  - name: Agent Dashboard
+    url: https://blackroad.dev/dashboard
+    about: View live agent status and metrics
