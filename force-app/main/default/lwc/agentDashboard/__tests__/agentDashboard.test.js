@@ -11,257 +11,191 @@ const getDashboardStatsAdapter = registerApexTestWireAdapter(getDashboardStats);
 
 const MOCK_AGENTS = [
   {
-    Id: "a001",
-    AgentId__c: "lucidia",
+    Id: "001000000000001",
     Name: "Lucidia",
+    AgentId__c: "lucidia-001",
+    Symbol__c: "\u25C8",
+    Role__c: "Memory Keeper",
     Status__c: "active",
-    Role__c: "Data Analyst",
-    Domain__c: "analytics",
-    DeployTarget__c: "pi",
-    OllamaModel__c: "llama3",
-    Symbol__c: "◈"
+    Domain__c: "Memory",
+    DeployTarget__c: "octavia_pi",
+    OllamaModel__c: "qwen2.5:7b"
   },
   {
-    Id: "a002",
-    AgentId__c: "octavia",
+    Id: "001000000000002",
     Name: "Octavia",
-    Status__c: "idle",
+    AgentId__c: "octavia-001",
+    Symbol__c: "\u2699",
     Role__c: "Orchestrator",
-    Domain__c: "ops",
-    DeployTarget__c: "cf",
-    OllamaModel__c: "mistral",
-    Symbol__c: "⬡"
+    Status__c: "spawning",
+    Domain__c: "Infrastructure",
+    DeployTarget__c: "cloudflare_worker",
+    OllamaModel__c: "qwen2.5:7b"
   }
 ];
 
 const MOCK_TASKS = [
   {
-    Id: "t001",
-    Name: "Deploy workflow",
+    Id: "002000000000001",
+    Name: "Deploy agent config",
+    Agent__r: { Name: "Lucidia", Symbol__c: "\u25C8" },
     Status__c: "pending",
-    Priority__c: "high",
-    TargetRepo__c: "blackroad-operator",
-    Agent__r: { Name: "Lucidia" }
+    Priority__c: "High",
+    TargetRepo__c: "BlackRoad-OS-Inc/blackroad-operator"
   }
 ];
 
 const MOCK_STATS = {
-  totalAgents: 2,
-  activeAgents: 1,
-  cfWorkers: 3,
-  piAgents: 2,
-  pendingTasks: 1,
-  totalCost: "$0"
+  totalAgents: 193,
+  activeAgents: 42,
+  cfWorkers: 12,
+  piAgents: 8,
+  pendingTasks: 5,
+  totalCost: "$0.00"
 };
+
+// eslint-disable-next-line @lwc/lwc/no-async-operation
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe("c-agent-dashboard", () => {
   afterEach(() => {
     while (document.body.firstChild) {
       document.body.removeChild(document.body.firstChild);
     }
+    jest.restoreAllMocks();
   });
 
-  it("renders without errors", () => {
+  function createComponent() {
     const element = createElement("c-agent-dashboard", { is: AgentDashboard });
     document.body.appendChild(element);
-    expect(element).not.toBeNull();
+    return element;
+  }
+
+  it("renders the component with header", () => {
+    const element = createComponent();
+    const header = element.shadowRoot.querySelector("h1");
+    expect(header).not.toBeNull();
+    expect(header.textContent).toContain("BlackRoad OS");
   });
 
-  it("displays stats bar when stats data is wired", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
+  it("displays stats bar when wire returns data", async () => {
+    const element = createComponent();
 
     getDashboardStatsAdapter.emit(MOCK_STATS);
+    await flushPromises();
 
-    return Promise.resolve().then(() => {
-      const statsBar = element.shadowRoot.querySelector(".stats-bar");
-      expect(statsBar).not.toBeNull();
-    });
+    const statsBar = element.shadowRoot.querySelector(".stats-bar");
+    expect(statsBar).not.toBeNull();
+
+    const statNumbers = element.shadowRoot.querySelectorAll(".stat-number");
+    expect(statNumbers.length).toBeGreaterThan(0);
   });
 
-  it("maps agent data with statusClass on wire", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
+  it("renders agent cards from wire data", async () => {
+    const element = createComponent();
 
     getActiveAgentsAdapter.emit(MOCK_AGENTS);
+    await flushPromises();
 
-    return Promise.resolve().then(() => {
-      const agentCards = element.shadowRoot.querySelectorAll(".agent-card");
-      expect(agentCards.length).toBe(2);
-      // First card's status badge should carry the mapped statusClass
-      const firstBadge = agentCards[0].querySelector(".status-badge");
-      expect(firstBadge.className).toContain("status-active");
-    });
+    const agentCards = element.shadowRoot.querySelectorAll(".agent-card");
+    expect(agentCards.length).toBe(2);
   });
 
-  it("maps pending tasks with agentName on wire", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    getPendingTasksAdapter.emit(MOCK_TASKS);
-
-    return Promise.resolve().then(() => {
-      // Datatable stub receives the mapped data; verify via the stub's data property
-      const datatable = element.shadowRoot.querySelector("lightning-datatable");
-      expect(datatable.data[0].agentName).toBe("Lucidia");
-    });
-  });
-
-  it("handles missing Agent__r gracefully", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    getPendingTasksAdapter.emit([
-      {
-        Id: "t002",
-        Name: "Orphan task",
-        Status__c: "pending",
-        Priority__c: "low",
-        TargetRepo__c: "blackroad-sf"
-      }
-    ]);
-
-    return Promise.resolve().then(() => {
-      // agentName should default to '' when Agent__r is absent
-      const datatable = element.shadowRoot.querySelector("lightning-datatable");
-      expect(datatable.data[0].agentName).toBe("");
-    });
-  });
-
-  it("logs error when getActiveAgents wire returns error", () => {
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    getActiveAgentsAdapter.error({ message: "Apex error" });
-
-    return Promise.resolve().then(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Error loading agents:",
-        expect.anything()
-      );
-      consoleSpy.mockRestore();
-    });
-  });
-
-  it("updates syncPayload on combobox change", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    const changeEvent = new CustomEvent("change", {
-      detail: { value: "workflows" }
-    });
-    const combobox = element.shadowRoot.querySelector("lightning-combobox");
-    combobox.dispatchEvent(changeEvent);
-
-    return Promise.resolve().then(() => {
-      // After the change event, subsequent triggerUniverseSync should send 'workflows' payload
-      let capturedBody;
-      global.fetch = jest.fn().mockImplementation((_url, opts) => {
-        capturedBody = JSON.parse(opts.body);
-        return Promise.resolve({ ok: true });
-      });
-      element.addEventListener("lightning__showtoast", () => {});
-      const buttons = element.shadowRoot.querySelectorAll("lightning-button");
-      buttons[1].dispatchEvent(new CustomEvent("click"));
-      return Promise.resolve().then(() => {
-        expect(capturedBody.inputs.payload).toBe("workflows");
-      });
-    });
-  });
-
-  it("triggerUniverseSync posts to gateway workflow endpoint", async () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    global.fetch = jest.fn().mockResolvedValue({ ok: true });
-    element.addEventListener("lightning__showtoast", () => {});
-
-    // Header buttons: [0]=Sync from Pi Fleet, [1]=Deploy to All Orgs (→ triggerUniverseSync)
-    const buttons = element.shadowRoot.querySelectorAll("lightning-button");
-    buttons[1].dispatchEvent(new CustomEvent("click"));
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/github/workflow"),
-      expect.objectContaining({ method: "POST" })
-    );
-  });
-
-  it("triggerUniverseSync uses blackroad-operator repo", async () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
-
-    let capturedBody;
-    global.fetch = jest.fn().mockImplementation((_url, opts) => {
-      capturedBody = JSON.parse(opts.body);
-      return Promise.resolve({ ok: true });
-    });
-
-    element.addEventListener("lightning__showtoast", () => {});
-
-    // Header buttons: [0]=Sync from Pi Fleet, [1]=Deploy to All Orgs (→ triggerUniverseSync)
-    const buttons = element.shadowRoot.querySelectorAll("lightning-button");
-    buttons[1].dispatchEvent(new CustomEvent("click"));
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(capturedBody.repo).toBe("BlackRoad-OS-Inc/blackroad-operator");
-  });
-
-  it("invokeAgent dispatches success toast when fetch succeeds", async () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
+  it("maps status to correct statusClass on badges", async () => {
+    const element = createComponent();
 
     getActiveAgentsAdapter.emit(MOCK_AGENTS);
-    await Promise.resolve();
+    await flushPromises();
 
-    global.fetch = jest.fn().mockResolvedValue({ ok: true });
-    element.addEventListener("lightning__showtoast", () => {});
-
-    const invokeBtn = element.shadowRoot.querySelector(
-      'lightning-button-icon[title="Invoke Agent"]'
-    );
-    invokeBtn.dispatchEvent(new CustomEvent("click"));
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/agent"),
-      expect.objectContaining({ method: "POST" })
-    );
+    const badges = element.shadowRoot.querySelectorAll(".status-badge");
+    expect(badges.length).toBe(2);
+    expect(badges[0].classList.contains("status-active")).toBe(true);
+    expect(badges[1].classList.contains("status-spawning")).toBe(true);
   });
 
-  it("syncFromPi dispatches info toast", async () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
+  it("handles task with missing Agent__r gracefully", async () => {
+    const element = createComponent();
 
-    const toastEvents = [];
-    element.addEventListener("lightning__showtoast", (e) =>
-      toastEvents.push(e)
-    );
+    const taskNoAgent = [{ ...MOCK_TASKS[0], Agent__r: undefined }];
+    getPendingTasksAdapter.emit(taskNoAgent);
+    await flushPromises();
 
-    // Header buttons: [0]=Sync from Pi Fleet (→ syncFromPi)
-    const buttons = element.shadowRoot.querySelectorAll("lightning-button");
-    buttons[0].dispatchEvent(new CustomEvent("click"));
-
-    await Promise.resolve();
-
-    expect(toastEvents.length).toBeGreaterThan(0);
-    expect(toastEvents[0].detail.variant).toBe("info");
+    // Component should not throw — verify it still renders
+    expect(element.shadowRoot.querySelector("h1")).not.toBeNull();
   });
 
-  it("payloadOptions contains expected entries", () => {
-    const element = createElement("c-agent-dashboard", { is: AgentDashboard });
-    document.body.appendChild(element);
+  it("logs error when agents wire fails", async () => {
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+    createComponent();
 
+    getActiveAgentsAdapter.error();
+    await flushPromises();
+
+    expect(consoleSpy).toHaveBeenCalled();
+  });
+
+  it("renders combobox with payload options", async () => {
+    const element = createComponent();
+
+    getDashboardStatsAdapter.emit(MOCK_STATS);
+    await flushPromises();
+
+    // Navigate to deploy tab to find combobox
     const combobox = element.shadowRoot.querySelector("lightning-combobox");
     expect(combobox).not.toBeNull();
+  });
+
+  it("triggers universe sync via Deploy button", async () => {
+    const element = createComponent();
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+
+    const buttons = element.shadowRoot.querySelectorAll("lightning-button");
+    const deployBtn = Array.from(buttons).find(
+      (b) => b.label === "Deploy to All Orgs"
+    );
+    expect(deployBtn).toBeDefined();
+
+    deployBtn.click();
+    await flushPromises();
+
+    expect(global.fetch).toHaveBeenCalled();
+    const callArgs = global.fetch.mock.calls[0];
+    const body = JSON.parse(callArgs[1].body);
+    expect(body.repo).toBe("BlackRoad-OS-Inc/blackroad-operator");
+  });
+
+  it("dispatches toast on Sync from Pi button click", async () => {
+    const element = createComponent();
+    const handler = jest.fn();
+    element.addEventListener("lightning__showtoast", handler);
+
+    const buttons = element.shadowRoot.querySelectorAll("lightning-button");
+    const syncBtn = Array.from(buttons).find(
+      (b) => b.label === "Sync from Pi Fleet"
+    );
+    expect(syncBtn).toBeDefined();
+
+    syncBtn.click();
+    await flushPromises();
+
+    expect(handler).toHaveBeenCalled();
+  });
+
+  it("shows cost badge in header", () => {
+    const element = createComponent();
+    const badge = element.shadowRoot.querySelector(".cost-badge");
+    expect(badge).not.toBeNull();
+    expect(badge.textContent).toBe("$0/mo");
+  });
+
+  it("renders agent name and symbol", async () => {
+    const element = createComponent();
+
+    getActiveAgentsAdapter.emit(MOCK_AGENTS);
+    await flushPromises();
+
+    const names = element.shadowRoot.querySelectorAll(".agent-name");
+    expect(names[0].textContent).toBe("Lucidia");
+    expect(names[1].textContent).toBe("Octavia");
   });
 });

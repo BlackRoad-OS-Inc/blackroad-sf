@@ -1,0 +1,22 @@
+{
+  "name": "blackroad-sf",
+  "description": "Salesforce metadata for BlackRoad OS agent orchestration",
+  "platform": "salesforce",
+  "language": ["apex", "javascript", "html"],
+  "framework": ["lwc", "lightning"],
+  "api_version": "65.0",
+  "objects": [
+    "Agent__c",
+    "AgentTask__c",
+    "AgentDeployment__c",
+    "AgentMemory__c",
+    "AgentModel__c",
+    "AgentRelationship__c"
+  ],
+  "integrations": ["cloudflare-workers", "ollama", "github-actions"],
+  "owner": "BlackRoad-OS-Inc",
+  "related_repos": [
+    "BlackRoad-OS-Inc/blackroad-operator",
+    "BlackRoad-OS-Inc/blackroad-agents"
+  ]
+}
